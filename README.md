@@ -44,5 +44,5 @@ DeflexNet is an experimentation environment for exploring dynamic load flexibili
 ## Additional Resources
 - [DeflexNet whitepaper](https://example.com/deflexnet-whitepaper)
 - [Issue tracker](https://github.com/your-org/deflexnet-app/issues)
-- [Contribution guidelines](CONTRIBUTING.md) if present in the repository
+- [Contribution guidelines](CONTRIBUTING.md)
 
