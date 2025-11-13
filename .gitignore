@@ -1,0 +1,9 @@
+.env
+node_modules
+dist
+models/*
+!models/.gitkeep
+pgdata
+minio_data
+qdrant_data
+.ark/

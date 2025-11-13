@@ -1,0 +1,42 @@
+FROM nvidia/cuda:12.1.1-runtime-ubuntu22.04
+
+ENV DEBIAN_FRONTEND=noninteractive \
+    PIPX_DEFAULT_PYTHON=/usr/bin/python3.11 \
+    PATH=/root/.local/bin:$PATH
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl \
+    ca-certificates \
+    git \
+    git-lfs \
+    gnupg \
+    make \
+    build-essential \
+    software-properties-common \
+    && rm -rf /var/lib/apt/lists/*
+
+# Python 3.11 from deadsnakes
+RUN add-apt-repository ppa:deadsnakes/ppa -y \
+    && apt-get update && apt-get install -y --no-install-recommends \
+       python3.11 \
+       python3.11-distutils \
+       python3.11-dev \
+       python3.11-venv \
+       pipx \
+    && rm -rf /var/lib/apt/lists/*
+
+# Ensure python3 points to Python 3.11 and install pip
+RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.11 1 \
+    && python3.11 -m ensurepip --upgrade
+
+# Node.js 20 (from NodeSource)
+RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+    && apt-get install -y --no-install-recommends nodejs \
+    && rm -rf /var/lib/apt/lists/*
+
+# Developer tooling via pipx
+RUN pipx install poetry \
+    && pipx install uv \
+    && git lfs install --system
+
+CMD ["bash"]
