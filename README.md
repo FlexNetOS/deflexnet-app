@@ -42,6 +42,7 @@ DeflexNet is an experimentation environment for exploring dynamic load flexibili
 4. Reviewers focus on energy domain accuracy, accessibility of visualizations, and maintainability. Please incorporate review feedback promptly.
 
 ## Additional Resources
-- [Issue tracker](https://github.com/deflexnet/deflexnet-app/issues)
+- [DeflexNet whitepaper](https://example.com/deflexnet-whitepaper)
+- [Issue tracker](https://github.com/FlexNetOS/deflexnet-app/issues)
 - [Contribution guidelines](CONTRIBUTING.md)
 
