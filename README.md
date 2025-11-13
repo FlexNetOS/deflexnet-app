@@ -1,60 +1,47 @@
-# DeflexNet Digest Pipeline
+# DeflexNet Application
 
-This repository contains a lightweight, fully offline-friendly pipeline that
-builds a "digest" of any source workspace. The pipeline is implemented as a
-series of agents/stages that walk a repository, collect metadata, and emit
-registry-ready artifacts for downstream systems.
+## Project Description
+DeflexNet is an experimentation environment for exploring dynamic load flexibility in modern energy systems. This repository contains the web application that visualizes simulated demand response scenarios, provides tools for analyzing flexibility potential, and demonstrates integration patterns for distributed energy resources. The goal is to offer researchers and engineers an accessible starting point for adapting DeflexNet concepts to their own grid innovation projects.
 
-## Features
+## Prerequisites
+- Node.js 18 or later
+- npm 9 or later
+- Git for cloning the repository
+- Optional: Docker (for containerized deployments) and a modern web browser for interacting with the UI
 
-The pipeline mirrors the "Everything" flow outlined in the product brief:
+## Setup
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/FlexNetOS/deflexnet-app.git
+   cd deflexnet-app
+   ```
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+3. Copy environment defaults if needed and adjust values for your data sources:
+   ```bash
+   cp .env.example .env.local
+   ```
+4. Start the development server:
+   ```bash
+   npm run dev
+   ```
+5. Open the app in your browser at [http://localhost:3000](http://localhost:3000).
 
-1. **Intake** – clone/fetch, provenance hints, and file census.
-2. **Classifier** – detect languages, build systems, and license files.
-3. **Graph Extract** – produce a minimal knowledge graph (`kg.json`).
-4. **Embeddings** – generate deterministic pseudo embeddings for every file.
-5. **Environment Synthesis** – surface runtime/configuration cues.
-6. **Safety** – prepare SBOM/vulnerability/secrets placeholders.
-7. **Runner** – draft build/test runbooks based on detected tooling.
-8. **Reverse Engineer** – stage future binary/HTTP/fuzzing probes.
-9. **Integrator** – emit SDK/adapter stubs and telemetry hooks.
-10. **Registrar** – author `profile.json`, `system_card.md`, and summary logs.
-11. **CRM Strangler** – capture proxy rollout toggles for controlled adoption.
+## Usage
+- Explore the dashboard to review aggregated load flexibility indicators.
+- Use scenario controls to toggle between forecast and real-time datasets.
+- Inspect charts to understand ramping capabilities, curtailment windows, and cost impacts.
+- Export datasets via the provided download actions to integrate DeflexNet outputs into downstream analytics tools.
 
-All stages are pure Python, require no third-party packages, and execute within
-this workspace or on air-gapped hosts.
+## Contribution Guidelines
+1. Create an issue describing planned changes before starting significant work.
+2. Follow conventional commit messages and ensure linting/tests pass before opening a pull request.
+3. Submit pull requests with contextual descriptions, screenshots for UI updates, and references to related research or datasets when applicable.
+4. Reviewers focus on energy domain accuracy, accessibility of visualizations, and maintainability. Please incorporate review feedback promptly.
 
-## Running the pipeline
+## Additional Resources
+- [Issue tracker](https://github.com/deflexnet/deflexnet-app/issues)
+- [Contribution guidelines](CONTRIBUTING.md)
 
-```bash
-python run_pipeline.py /path/to/repo --output build/digest
-```
-
-The command analyses the given repository and writes machine readable artifacts
-under the specified `--output` directory. A `summary.json` file captures
-structured logs for each stage. For development convenience, the default output
-path is `build/digest` within the current working directory.
-
-## Tests
-
-A minimal smoke test verifies that the pipeline runs end-to-end with the staged
-components.
-
-```bash
-pytest
-```
-
-## Project layout
-
-```
-digest_pipeline/
-  __init__.py          # exports pipeline primitives and stage classes
-  pipeline.py          # orchestration base classes
-  stages.py            # implementation of each pipeline agent
-run_pipeline.py         # CLI entry point
-tests/test_pipeline.py  # pytest smoke test
-```
-
-The pipeline emits artifacts directly into the output directory, so downstream
-systems can upload or version the bundle without additional serialization
-steps.
