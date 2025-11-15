@@ -52,7 +52,7 @@ check_docker_nvidia_runtime() {
     failures=$((failures + 1))
     return
   fi
-  if docker info --format '{{json .Runtimes}}' 2>/dev/null | grep -qi 'nvidia'; then
+  if docker info --format '{{json .Runtimes}}' 2>/dev/null | grep -q '"nvidia"'; then
     echo "[check_env] ✔ NVIDIA Container Toolkit detected"
   else
     echo "[check_env] ✖ NVIDIA Container Toolkit runtime missing"
