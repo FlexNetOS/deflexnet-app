@@ -117,7 +117,8 @@ case "${1:-}" in
       echo "ark: unable to parse result field (install jq or python3 for validation)" >&2
       exit 0
     fi
-    if [[ "$result" == "PASS" || "$result" == "PASS_WITH_CONDITIONS" ]]; then
+    result_upper="$(echo "$result" | tr '[:lower:]' '[:upper:]')"
+    if [[ "$result_upper" == "PASS" || "$result_upper" == "PASS_WITH_CONDITIONS" ]]; then
       exit 0
     fi
     echo "ark: court verdict is '$result'" >&2
