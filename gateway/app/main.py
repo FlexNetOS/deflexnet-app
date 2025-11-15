@@ -125,3 +125,8 @@ async def agent_stub(path: str) -> dict[str, str]:
 async def tools_stub(path: str) -> dict[str, str]:
     return {"path": path, "status": "stub"}
 
+
+@app.on_event("startup")
+def warm_pack() -> None:
+    """Validate the constitutional pack is present when the service boots."""
+    load_constitutional_pack()
