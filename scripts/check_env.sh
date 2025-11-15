@@ -74,7 +74,7 @@ port = int(sys.argv[1])
 s = socket.socket()
 try:
     s.bind(("0.0.0.0", port))
-except OSError:
+except Exception:
     sys.exit(1)
 finally:
     s.close()
