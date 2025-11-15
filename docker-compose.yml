@@ -1,6 +1,10 @@
 version: '3.9'
 
 services:
+  # vLLM model server
+  # NOTE: First startup will download the model (~30GB). Ensure sufficient disk space
+  # and internet connectivity. The model will be cached in ./models directory.
+  # Minimum GPU memory requirement: 16GB for Qwen2.5-Coder-14B-Instruct
   vllm:
     image: vllm/vllm-openai:0.5.1
     command: >-
@@ -17,7 +21,10 @@ services:
     shm_size: '16g'
     deploy:
       resources:
+        limits:
+          memory: 24g
         reservations:
+          memory: 16g
           devices:
             - driver: nvidia
               count: 1
@@ -68,8 +75,7 @@ services:
     healthcheck:
       test:
         - CMD-SHELL
-        - >-
-          node -e "fetch('http://localhost:3000').then(()=>process.exit(0)).catch(()=>process.exit(1))"
+        - curl -f http://localhost:3000 || exit 1
       interval: 30s
       timeout: 10s
       retries: 5
