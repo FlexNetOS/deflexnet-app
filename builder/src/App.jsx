@@ -46,7 +46,7 @@ export default function App() {
       if (err instanceof SyntaxError) {
         setError('Plan must be valid JSON.');
       } else {
-        setError(err.message ?? 'Unknown error');
+        setError(err.message || 'Unknown error');
       }
       setVerdict(null);
     } finally {
