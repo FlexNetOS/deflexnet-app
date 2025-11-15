@@ -1,5 +1,8 @@
 FROM nvidia/cuda:12.1.1-runtime-ubuntu22.04
 
+# This devcontainer runs as root user. Tools are installed to /root/.local/bin.
+# If configuring VS Code's remoteUser to a non-root user, adjust PATH and installation
+# locations accordingly.
 ENV DEBIAN_FRONTEND=noninteractive \
     PIPX_DEFAULT_PYTHON=/usr/bin/python3.11 \
     PATH=/root/.local/bin:$PATH

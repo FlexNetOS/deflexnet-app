@@ -7,6 +7,9 @@ pgdata
 minio_data
 qdrant_data
 .ark/
+__pycache__
+*.pyc
+
 __pycache__/
 *.pyc
 build/

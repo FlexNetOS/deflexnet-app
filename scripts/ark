@@ -97,6 +97,11 @@ case "${1:-}" in
       echo "ark: curl is required for this command" >&2
       exit 1
     fi
+    # Check if gateway is accessible before attempting the request
+    if ! curl -sf http://localhost:8000/healthz >/dev/null 2>&1; then
+      echo "ark: gateway not accessible at http://localhost:8000 (is it running?)" >&2
+      exit 1
+    fi
     if [[ -f "$plan" ]]; then
       plan_path="$plan"
     elif [[ -f "$ROOT_DIR/$plan" ]]; then

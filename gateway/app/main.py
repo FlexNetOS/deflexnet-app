@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+from contextlib import asynccontextmanager
 from functools import lru_cache
 from pathlib import Path
 from typing import Any
@@ -9,8 +10,24 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
-app = FastAPI(title="DeflexNet Gateway")
+PACK_ROOT = Path(os.getenv("CONSTITUTIONAL_PACK", "/constitutional_pack"))
+VLLM_API_BASE = os.getenv("VLLM_API_BASE", "http://vllm:8000")
 
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Validate the constitutional pack is present when the service boots."""
+    if not PACK_ROOT.exists():
+        raise RuntimeError(f"constitutional pack not found at {PACK_ROOT}")
+    load_constitutional_pack()
+    yield
+
+
+app = FastAPI(title="DeflexNet Gateway", lifespan=lifespan)
+
+# CORS is configured to allow all origins without credentials for local development.
+# This is intentional for the current use case; if credentials become necessary in the
+# future, specific origins should be configured instead of using wildcard.
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -18,9 +35,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"]
 )
-
-PACK_ROOT = Path(os.getenv("CONSTITUTIONAL_PACK", "/constitutional_pack"))
-VLLM_API_BASE = os.getenv("VLLM_API_BASE", "http://vllm:8000")
 
 
 class CourtPlan(BaseModel):
@@ -45,6 +59,11 @@ def _read_section(section: str) -> dict[str, str]:
 
 @lru_cache(maxsize=1)
 def load_constitutional_pack() -> dict[str, Any]:
+    """Load and cache the constitutional pack. Cache persists until service restart.
+    
+    Note: If pack files are updated at runtime, the service must be restarted for
+    changes to take effect due to LRU caching.
+    """
     if not PACK_ROOT.exists():
         raise FileNotFoundError(f"constitutional pack not found at {PACK_ROOT}")
 
@@ -91,11 +110,17 @@ async def court_trifecta(payload: CourtPlan) -> dict[str, Any]:
     }
 
 
+# WARNING: The 'path' parameter is not validated or sanitized.
+# If this endpoint is expanded to perform file or database operations using 'path',
+# proper validation/sanitization must be implemented to prevent path traversal or injection vulnerabilities.
 @app.get("/agent/{path:path}")
 async def agent_stub(path: str) -> dict[str, str]:
     return {"path": path, "status": "stub"}
 
 
+# WARNING: The 'path' parameter is not validated or sanitized.
+# If this endpoint is expanded to perform file or database operations using 'path',
+# proper validation/sanitization must be implemented to prevent path traversal or injection vulnerabilities.
 @app.get("/tools/{path:path}")
 async def tools_stub(path: str) -> dict[str, str]:
     return {"path": path, "status": "stub"}

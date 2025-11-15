@@ -11,6 +11,8 @@ const defaultPlan = JSON.stringify(
   2
 );
 
+const GATEWAY_URL = import.meta.env.VITE_GATEWAY_URL || 'http://localhost:8000';
+
 export default function App() {
   const [health, setHealth] = useState({ status: 'checking', pack_sections: [] });
   const [plan, setPlan] = useState(defaultPlan);
@@ -19,7 +21,7 @@ export default function App() {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    fetch('http://localhost:8000/healthz')
+    fetch(`${GATEWAY_URL}/healthz`)
       .then(r => r.json())
       .then(d => setHealth(d))
       .catch(() => setHealth({ status: 'error', pack_sections: [] }));
@@ -30,7 +32,7 @@ export default function App() {
     setError(null);
     try {
       const parsed = JSON.parse(plan);
-      const response = await fetch('http://localhost:8000/court/trifecta', {
+      const response = await fetch(`${GATEWAY_URL}/court/trifecta`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(parsed)
