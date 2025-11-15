@@ -1,0 +1,13 @@
+{
+  "case": "demo",
+  "evidence": [
+    "Agent complied with scripture",
+    "Geometry validated",
+    "Policy review scheduled"
+  ],
+  "verdict": "pending",
+  "metadata": {
+    "submitted_by": "ark-cli",
+    "timestamp": "2024-06-01T00:00:00Z"
+  }
+}

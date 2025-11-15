@@ -1,0 +1,155 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
+COMPOSE_FILE="$ROOT_DIR/docker-compose.yml"
+CHANGES_DIR="$ROOT_DIR/.ark"
+COMPOSE_BIN=()
+
+usage() {
+  cat <<USAGE
+usage: ark {up|down|logs|check|court|dev}
+
+Commands:
+  up                 Build and start the stack in the background
+  down               Stop all running services
+  logs               Tail docker compose logs
+  check              Run environment validation (scripts/check_env.sh)
+  court <plan.json>  POST a plan to /court/trifecta and pretty-print the verdict
+  dev codegen "..."  Placeholder code generator (writes to .ark/)
+USAGE
+}
+
+ensure_compose_command() {
+  if docker compose version >/dev/null 2>&1; then
+    COMPOSE_BIN=(docker compose)
+  elif command -v docker-compose >/dev/null 2>&1; then
+    COMPOSE_BIN=(docker-compose)
+  else
+    echo "ark: docker compose is required" >&2
+    exit 1
+  fi
+}
+
+compose() {
+  if [[ ${#COMPOSE_BIN[@]} -eq 0 ]]; then
+    ensure_compose_command
+  fi
+  (cd "$ROOT_DIR" && "${COMPOSE_BIN[@]}" -f "$COMPOSE_FILE" "$@")
+}
+
+ensure_env_file() {
+  if [[ ! -f "$ROOT_DIR/.env" && -f "$ROOT_DIR/.env.sample" ]]; then
+    cp "$ROOT_DIR/.env.sample" "$ROOT_DIR/.env"
+    echo "ark: created .env from .env.sample"
+  fi
+}
+
+pretty_print_json() {
+  if command -v jq >/dev/null 2>&1; then
+    jq
+  else
+    cat
+  fi
+}
+
+extract_result() {
+  local payload="$1"
+  if command -v jq >/dev/null 2>&1; then
+    printf '%s\n' "$payload" | jq -r '.result' 2>/dev/null || echo ''
+  elif command -v python3 >/dev/null 2>&1; then
+    printf '%s\n' "$payload" | python3 - <<'PY' 2>/dev/null || true
+import json
+import sys
+try:
+    data = json.loads(sys.stdin.read())
+    print(data.get("result", ""))
+except Exception:
+    pass
+PY
+  else
+    echo ''
+  fi
+}
+
+case "${1:-}" in
+  up)
+    ensure_env_file
+    compose up --build -d
+    ;;
+  down)
+    compose down
+    ;;
+  logs)
+    compose logs -f
+    ;;
+  check)
+    "$ROOT_DIR/scripts/check_env.sh"
+    ;;
+  court)
+    plan="${2:-}"
+    if [[ -z "$plan" ]]; then
+      echo "ark: plan file required" >&2
+      usage
+      exit 1
+    fi
+    if ! command -v curl >/dev/null 2>&1; then
+      echo "ark: curl is required for this command" >&2
+      exit 1
+    fi
+    if [[ -f "$plan" ]]; then
+      plan_path="$plan"
+    elif [[ -f "$ROOT_DIR/$plan" ]]; then
+      plan_path="$ROOT_DIR/$plan"
+    else
+      echo "ark: unable to locate plan file '$plan'" >&2
+      exit 1
+    fi
+    response="$(curl -sS -X POST http://localhost:8000/court/trifecta \
+      -H 'Content-Type: application/json' --data @"$plan_path")"
+    if [[ -z "$response" ]]; then
+      echo "ark: empty response from gateway" >&2
+      exit 1
+    fi
+    echo "$response" | pretty_print_json
+    result="$(extract_result "$response")"
+    if [[ -z "$result" ]]; then
+      echo "ark: unable to parse result field (install jq or python3 for validation)" >&2
+      exit 0
+    fi
+    result_upper="$(echo "$result" | tr '[:lower:]' '[:upper:]')"
+    if [[ "$result_upper" == "PASS" || "$result_upper" == "PASS_WITH_CONDITIONS" ]]; then
+      exit 0
+    fi
+    echo "ark: court verdict is '$result'" >&2
+    exit 1
+    ;;
+  dev)
+    if [[ "${2:-}" == "codegen" ]]; then
+      shift 2
+      mkdir -p "$CHANGES_DIR"
+      prompt="$*"
+      if [[ -z "$prompt" ]]; then
+        echo "ark: provide a prompt string" >&2
+        exit 1
+      fi
+      outfile="$CHANGES_DIR/changeset-$(date +%Y%m%d-%H%M%S).md"
+      {
+        echo "# TODO"
+        echo
+        echo "$prompt"
+      } > "$outfile"
+      echo "ark: wrote placeholder changeset to $outfile"
+    else
+      usage
+      exit 1
+    fi
+    ;;
+  ""|-h|--help)
+    usage
+    ;;
+  *)
+    usage
+    exit 1
+    ;;
+esac
