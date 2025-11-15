@@ -104,6 +104,4 @@ async def tools_stub(path: str) -> dict[str, str]:
 @app.on_event("startup")
 def warm_pack() -> None:
     """Validate the constitutional pack is present when the service boots."""
-    if not PACK_ROOT.exists():  # pragma: no cover - defensive guard
-        raise RuntimeError(f"constitutional pack not found at {PACK_ROOT}")
     load_constitutional_pack()
